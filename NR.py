@@ -54,11 +54,24 @@ def selecIndividuoRuleta (poblacion):
     return seleccion #deberia devolver entre 0 y el tamaño de la poblacion -1
 
 def correccionIndividuo(individuo):
-    #EN PROCESO
-    return individuoCorregido
+    ubicacion = []
+    faltan = [0] * len(individuo) #aqui marco con 1 los que si estan y los que faltan quedan en cero
+
+    for i in range(len(individuo)):
+        for j in range(i,len(individuo)):
+            faltan[individuo[i]-1]=1 #marcado de los que si estan
+            if ((individuo[i] == individuo[j]) and i!=j):
+                ubicacion.append(j)
+
+    for i in range(len(faltan)):
+        if (faltan[i]==0):
+            individuo[ubicacion[0]] = i+1
+            del ubicacion[0]
+
+    return individuo# individuoCorregido
 
 def cruzaIndividuos(individuoA,individuoB):
-    separacion = numRandomicoUnoToN(len(individuoA))
+    separacion = numRandomicoUnoToN(len(individuoA)-1)
 
     #Separamos los individuos
     a1 = individuoA[:separacion]
@@ -70,15 +83,27 @@ def cruzaIndividuos(individuoA,individuoB):
     newIndividuoA = a1+b2
     newIndividuoB = b1+a2
 
+    #corregimos los hijos
+    newIndividuoA = correccionIndividuo(newIndividuoA)
+    newIndividuoB = correccionIndividuo(newIndividuoB)
+
+    #Unimos ambas listas para poder retornarlas (ambos hijos
     newIndividuos = []
     newIndividuos.append(newIndividuoA)
     newIndividuos.append(newIndividuoB)
 
-    return newIndividuos
+    return newIndividuos #AHI SE VAN LOS HIJOS
 
 def mutacionIndividuo(individuo):
-    #en proceso
-    return individuoMutado
+    numero1 = numRandomicoUnoToN(len(individuo)-1)
+    numero2 = numRandomicoUnoToN(len(individuo)-1)
+    while(numero1 == numero2):
+        numero2 = numRandomicoUnoToN(len(individuo)-1)
+    tmp = individuo[numero1]
+    individuo[numero1] = individuo[numero2]
+    individuo[numero2] = tmp
+    return individuo
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 7:
@@ -94,5 +119,5 @@ if __name__ == "__main__":
     random.seed(semilla) #Asignamos la semilla al random.
 
     poblacion = initPoblacion(tamPoblacion,tamTablero)
-    print(cruzaIndividuos(poblacion[0],poblacion[1]))
-
+    cruzaIndividuos(poblacion[0],poblacion[1])
+    mutacionIndividuo(poblacion[0])

@@ -33,13 +33,22 @@ def selecIndividuoRuleta (poblacion):
     temp = 0 #dice que no se usa, pero bajo mi logica deberia estar aqui.
 
     for number in range(len(poblacion)): #este for es solo para obtener la sumatoria completa de la version invertida. 1/x
-        sumador = (1/calcFitness(poblacion[number])) + sumador
+        if(calcFitness(poblacion[number]) == 0): #CLARO ESTA, QUE SI EL FITNESS ES 0 ENTONCES NO PODEMOS DIVIDIR 1/0 , POR ENDE LO VOLVEREMOS 1, PARA CONSIDERARLO UN VALOR CON MAYOR PROBABILIDAD, YA QUE ES PERFECTO.
+            sumador = (1 / 1) + sumador
+        else:
+            sumador = (1/calcFitness(poblacion[number])) + sumador
 
     for x in range(len(poblacion)):
         if x == 0:
-            fitnes.append((1/calcFitness(poblacion[x])/sumador))
+            if (calcFitness(poblacion[x]) == 0):
+                fitnes.append((1/1)/sumador)
+            else:
+                fitnes.append((1/calcFitness(poblacion[x])/sumador))
         else:
-            temp = (1/calcFitness(poblacion[x]))/sumador
+            if (calcFitness(poblacion[x]) == 0):
+                temp = (1 / 1) / sumador
+            else:
+                temp = (1 / calcFitness(poblacion[x])) / sumador
             fitnes.append((temp)+fitnes[x-1])
 
     seleccion = numRandomicoReal()
@@ -50,8 +59,7 @@ def selecIndividuoRuleta (poblacion):
         else:
             if seleccion>fitnes[x-1] and seleccion<fitnes[x]:
                 seleccion = x
-    print(fitnes)
-    return seleccion #deberia devolver entre 0 y el tamaño de la poblacion -1
+    return poblacion[seleccion] #devuelvo el individuo seleccionado
 
 def correccionIndividuo(individuo):
     ubicacion = []
@@ -70,7 +78,7 @@ def correccionIndividuo(individuo):
 
     return individuo# individuoCorregido
 
-def cruzaIndividuos(individuoA,individuoB):
+def cruzaIndividuos(individuoA,individuoB): #OJO que el profesor en clases cuando hacia decendencia salian 2 hijos y yo hago lo mismo.
     separacion = numRandomicoUnoToN(len(individuoA)-1)
 
     #Separamos los individuos
@@ -104,6 +112,39 @@ def mutacionIndividuo(individuo):
     individuo[numero2] = tmp
     return individuo
 
+def reduccionPob(poblacionTotal):
+    for j in range (len(poblacionTotal)):
+        valorInicial = calcFitness(poblacionTotal[j])
+        posicion = j
+        for i in range (j,len(poblacionTotal)):
+            newValor = calcFitness(poblacionTotal[i])
+            if (valorInicial > newValor):
+                posicion = i
+                valorInicial = newValor
+        poblacionTotal.insert(j,poblacionTotal.pop(posicion))
+    return (poblacionTotal[0:int(len(poblacionTotal)/2)])
+
+def generarPobHijos(poblacion,probCruza,probMutacion):
+    poblacionHijos = []
+    while (len(poblacionHijos)<len(poblacion)):
+        if (probCruza/100 >= numRandomicoReal()):
+            individuo = cruzaIndividuos(selecIndividuoRuleta(poblacion),selecIndividuoRuleta(poblacion))
+            if(probMutacion/100 >= numRandomicoReal()):
+                individuo[0] = mutacionIndividuo(individuo[0]) #  que mute el primer hijo
+            if (probMutacion / 100 >= numRandomicoReal()):
+                individuo[1] = mutacionIndividuo(individuo[1])  # que mute el segundo hijo
+            poblacionHijos += (individuo)
+    if(len(poblacionHijos)>len(poblacion)): #PARA QUE LA CANTIDAD DE HIJOS SEAN IGUAL A LA CANTIDAD DE PADRES, BORRAMOS UNO YA QUE LA CRUZA NOS DA 2 HIJOS NO UNO.
+        poblacionHijos.pop(0)
+    return poblacionHijos
+
+def existeSol (poblacion):
+    soluciones = []
+    for i in range(len(poblacion)):
+        if (calcFitness(poblacion[i])==0):
+            soluciones.append(poblacion[i])
+    return soluciones
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 7:
@@ -118,6 +159,17 @@ if __name__ == "__main__":
 
     random.seed(semilla) #Asignamos la semilla al random.
 
-    poblacion = initPoblacion(tamPoblacion,tamTablero)
-    cruzaIndividuos(poblacion[0],poblacion[1])
-    mutacionIndividuo(poblacion[0])
+    poblacionInicial = initPoblacion(tamPoblacion, tamTablero)
+
+    for x in range(numIteraciones):
+        hijos = generarPobHijos(poblacionInicial,probCruza,probMutacion)
+        nuevaPoblacion = reduccionPob(poblacionInicial+hijos)
+        poblacionInicial.clear()
+        hijos.clear()
+        poblacionInicial = nuevaPoblacion
+        sol = existeSol(poblacionInicial)
+        if(len(sol)!=0):
+            print("Se encontro/encontraron la(s) siguiente(s) solucion(es) :", sol)
+            break
+        else:
+            sol.clear()

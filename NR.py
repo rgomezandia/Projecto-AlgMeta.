@@ -161,6 +161,7 @@ if __name__ == "__main__":
 
     poblacionInicial = initPoblacion(tamPoblacion, tamTablero)
 
+    bandera =0
     for x in range(numIteraciones):
         hijos = generarPobHijos(poblacionInicial,probCruza,probMutacion)
         nuevaPoblacion = reduccionPob(poblacionInicial+hijos)
@@ -170,7 +171,9 @@ if __name__ == "__main__":
         sol = existeSol(poblacionInicial)
         if(len(sol)!=0):
             print("Se encontro/encontraron la(s) siguiente(s) solucion(es) :", sol)
+            bandera = 1
             break
         else:
             sol.clear()
-    print("No se encontraron soluciones!")
+    if(bandera==0):
+        print("No se encontraron soluciones!")

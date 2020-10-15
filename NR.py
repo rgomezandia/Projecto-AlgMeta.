@@ -173,3 +173,4 @@ if __name__ == "__main__":
             break
         else:
             sol.clear()
+    print("No se encontraron soluciones!")
